@@ -142,7 +142,7 @@ def generate_launch_description():
 
     # RViz
     rviz_base = os.path.join(get_package_share_directory('franka_moveit_config'), 'rviz')
-    rviz_full_config = os.path.join(rviz_base, 'moveit.rviz')
+    rviz_full_config = os.path.join(rviz_base, 'abhishek_diffusionsdf.rviz')
 
     rviz_node = Node(
         package='rviz2',
@@ -167,6 +167,13 @@ def generate_launch_description():
         parameters=[robot_description],
     )
 
+    compliance_controllers_path = os.path.join(
+        get_package_share_directory('franka_moveit_config'),
+        'config',
+        'compliance_controller.yaml',
+    )
+
+
     ros2_controllers_path = os.path.join(
         get_package_share_directory('franka_moveit_config'),
         'config',
@@ -186,6 +193,7 @@ def generate_launch_description():
 
     # Load controllers
     load_controllers = []
+    #for controller in ['joint_trajectory_controller', 'joint_state_broadcaster', 'cartesian_compliance_controller']:
     for controller in ['joint_trajectory_controller', 'joint_state_broadcaster']:
         load_controllers += [
             ExecuteProcess(
