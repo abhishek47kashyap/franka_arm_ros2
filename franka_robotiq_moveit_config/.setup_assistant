@@ -1,0 +1,25 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: franka_robotiq_description
+    relative_path: urdf/franka_robotiq.urdf.xacro
+  srdf:
+    relative_path: config/franka_robotiq.srdf
+  package_settings:
+    author_name: Abhishek Kashyap
+    author_email: abhishek.kashyap@oru.se
+    generated_timestamp: 1757704627
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
+  modified_urdf:
+    xacros:
+      - control_xacro
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity

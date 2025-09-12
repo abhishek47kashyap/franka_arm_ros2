@@ -34,6 +34,10 @@
   <exec_depend>moveit_simple_controller_manager</exec_depend>
   <exec_depend>octomap_rviz_plugins</exec_depend>
 
+  <!-- Robotiq -->
+  <exec_depend>robotiq_description</exec_depend>
+
+
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
   <test_depend>ament_cmake_pytest</test_depend>

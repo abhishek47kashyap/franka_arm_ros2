@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<robot name="franka_robotiq" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Include the arm -->
+  <xacro:include filename="$(find franka_description)/robots/panda_arm.xacro"/>
+
+  <!-- Include just the Robotiq macro, NOT the full gripper urdf -->
+  <xacro:include filename="$(find robotiq_description)/urdf/robotiq_2f_85_macro.urdf.xacro"/>
+
+  <!-- Instantiate the Franka arm -->
+  <xacro:panda_arm arm_id="panda" safety_distance="0.0"/>
+
+  <!-- Instantiate the Robotiq gripper once -->
+  <xacro:robotiq_gripper 
+  name="gripper"
+  prefix=""
+  parent="panda_link8"
+  sim_ignition="false"
+  sim_isaac="false"
+  use_fake_hardware="true"
+  fake_sensor_commands="false"
+  include_ros2_control="true"
+  com_port="/dev/ttyUSB0">
+  
+  <!-- Adjust the gripper mounting pose relative to panda_link8 -->
+  <origin xyz="0 0 -0.03" rpy="0 0 0"/>
+  
+</xacro:robotiq_gripper>
+
+</robot>
