@@ -27,6 +27,7 @@ from launch.substitutions import Command, FindExecutable, LaunchConfiguration, P
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 import yaml
+import json
 
 
 def load_yaml(package_name, file_path):
@@ -37,7 +38,10 @@ def load_yaml(package_name, file_path):
         with open(absolute_file_path, 'r') as file:
             return yaml.safe_load(file)
     except EnvironmentError:  # parent of IOError, OSError *and* WindowsError where available
+        print(f"[ERROR] Failed to load YAML from {absolute_file_path}")
         return None
+    else:
+        print(f"[INFO] Successfully loaded {absolute_file_path}")
 
 
 def generate_launch_description():
@@ -124,6 +128,15 @@ def generate_launch_description():
         'publish_transforms_updates': True,
     }
 
+    # octomap
+    world_frame = 'panda_link0'
+    octomap_config = {
+        'octomap_frame': world_frame,
+        'octomap_resolution': 0.05,
+        'max_range': 5.0
+    }
+    octomap_updater_config = load_yaml('franka_moveit_config', 'config/sensors_3d.yaml')
+
     # Start the actual move_group node/action server
     run_move_group_node = Node(
         package='moveit_ros_move_group',
@@ -137,6 +150,8 @@ def generate_launch_description():
             trajectory_execution,
             moveit_controllers,
             planning_scene_monitor_parameters,
+            # octomap_config,
+            # octomap_updater_config,
         ],
     )
 

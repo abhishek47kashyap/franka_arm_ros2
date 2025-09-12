@@ -3,6 +3,9 @@ project(franka_moveit_config)
 
 find_package(ament_cmake REQUIRED)
 
+# https://github.com/OctoMap/octomap_rviz_plugins/issues/48#issuecomment-2310591335
+find_package(octomap REQUIRED)
+
 install(
   DIRECTORY config launch srdf rviz
   DESTINATION share/${PROJECT_NAME}
