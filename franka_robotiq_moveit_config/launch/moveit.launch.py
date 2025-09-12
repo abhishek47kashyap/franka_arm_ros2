@@ -26,6 +26,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+from launch_ros.parameter_descriptions import ParameterValue
 import yaml
 import json
 
@@ -75,14 +76,13 @@ def generate_launch_description():
 
     robot_description = {'robot_description': robot_description_config}
 
-    franka_semantic_xacro_file = os.path.join(get_package_share_directory('franka_robotiq_moveit_config'),
+    srdf_path = os.path.join(get_package_share_directory('franka_robotiq_moveit_config'),
                                               'config',
                                               'franka_robotiq.srdf')
-    robot_description_semantic_config = Command(
-        [FindExecutable(name='xacro'), ' ', franka_semantic_xacro_file, ' hand:=', load_gripper]
-    )
+    with open(srdf_path, 'r') as f:
+        srdf_content = f.read()
     robot_description_semantic = {
-        'robot_description_semantic': robot_description_semantic_config
+        'robot_description_semantic': ParameterValue(srdf_content, value_type=str)
     }
 
     kinematics_yaml = load_yaml(
