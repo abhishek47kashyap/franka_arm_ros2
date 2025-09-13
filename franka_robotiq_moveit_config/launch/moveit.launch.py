@@ -1,20 +1,3 @@
-#  Copyright (c) 2021 Franka Emika GmbH
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-
-# This file is an adapted version of
-# https://github.com/ros-planning/moveit_resources/blob/ca3f7930c630581b5504f3b22c40b4f82ee6369d/panda_moveit_config/launch/demo.launch.py
-
 import os
 
 from ament_index_python.packages import get_package_share_directory
@@ -38,7 +21,7 @@ def load_yaml(package_name, file_path):
     try:
         with open(absolute_file_path, 'r') as file:
             return yaml.safe_load(file)
-    except EnvironmentError:  # parent of IOError, OSError *and* WindowsError where available
+    except EnvironmentError:
         print(f"[ERROR] Failed to load YAML from {absolute_file_path}")
         return None
     else:
@@ -50,20 +33,45 @@ def generate_launch_description():
     use_fake_hardware_parameter_name = 'use_fake_hardware'
     load_gripper_parameter_name = 'load_gripper'
     fake_sensor_commands_parameter_name = 'fake_sensor_commands'
+    com_port_parameter_name = 'com_port'
 
     robot_ip = LaunchConfiguration(robot_ip_parameter_name)
     use_fake_hardware = LaunchConfiguration(use_fake_hardware_parameter_name)
     load_gripper = LaunchConfiguration(load_gripper_parameter_name)
     fake_sensor_commands = LaunchConfiguration(fake_sensor_commands_parameter_name)
-
+    com_port = LaunchConfiguration(com_port_parameter_name)
 
     # Command-line arguments
-
     db_arg = DeclareLaunchArgument(
         'db', default_value='False', description='Database flag'
     )
 
-    # planning_context
+    robot_arg = DeclareLaunchArgument(
+        robot_ip_parameter_name,
+        description='Hostname or IP address of the robot.')
+
+    use_fake_hardware_arg = DeclareLaunchArgument(
+        use_fake_hardware_parameter_name,
+        default_value='false',
+        description='Use fake hardware')
+
+    load_gripper_arg = DeclareLaunchArgument(
+        load_gripper_parameter_name,
+        default_value='true',
+        description='Use Robotiq Gripper as an end-effector')
+    
+    fake_sensor_commands_arg = DeclareLaunchArgument(
+        fake_sensor_commands_parameter_name,
+        default_value='false',
+        description="Fake sensor commands. Only valid when '{}' is true".format(
+            use_fake_hardware_parameter_name))
+
+    com_port_arg = DeclareLaunchArgument(
+        com_port_parameter_name,
+        default_value='/dev/ttyUSB1',
+        description='Port for communicating with Robotiq hardware')
+
+    # Robot description - combine both Franka and Robotiq
     franka_xacro_file = os.path.join(get_package_share_directory('franka_robotiq_description'), 'urdf',
                                      'franka_robotiq.urdf.xacro')
     robot_description_config = Command([
@@ -71,7 +79,8 @@ def generate_launch_description():
         ' ', franka_xacro_file,
         ' robot_ip:=', robot_ip,
         ' use_fake_hardware:=', use_fake_hardware,
-        ' fake_sensor_commands:=', fake_sensor_commands
+        ' fake_sensor_commands:=', fake_sensor_commands,
+        ' com_port:=', com_port
     ])
 
     robot_description = {
@@ -79,20 +88,21 @@ def generate_launch_description():
         'publish_robot_description': True
     }
 
+    # SRDF
     srdf_path = os.path.join(get_package_share_directory('franka_robotiq_moveit_config'),
-                                              'config',
-                                              'franka_robotiq.srdf')
+                            'config', 'franka_robotiq.srdf')
     with open(srdf_path, 'r') as f:
         srdf_content = f.read()
     robot_description_semantic = {
         'robot_description_semantic': ParameterValue(srdf_content, value_type=str)
     }
 
+    # Kinematics
     kinematics_yaml = load_yaml(
         'franka_robotiq_moveit_config', 'config/kinematics.yaml'
     )
 
-    # Planning Functionality
+    # Planning pipeline
     ompl_planning_pipeline_config = {
         'move_group': {
             'planning_plugin': 'ompl_interface/OMPLPlanner',
@@ -110,7 +120,7 @@ def generate_launch_description():
     )
     ompl_planning_pipeline_config['move_group'].update(ompl_planning_yaml)
 
-    # Trajectory Execution Functionality
+    # Controllers
     moveit_simple_controllers_yaml = load_yaml(
         'franka_robotiq_moveit_config', 'config/moveit_controllers.yaml'
     )
@@ -134,16 +144,7 @@ def generate_launch_description():
         'publish_transforms_updates': True,
     }
 
-    # octomap
-    world_frame = 'panda_link0'
-    octomap_config = {
-        'octomap_frame': world_frame,
-        'octomap_resolution': 0.05,
-        'max_range': 5.0
-    }
-    octomap_updater_config = load_yaml('franka_robotiq_moveit_config', 'config/sensors_3d.yaml')
-
-    # Start the actual move_group node/action server
+    # Move group node
     run_move_group_node = Node(
         package='moveit_ros_move_group',
         executable='move_group',
@@ -156,8 +157,6 @@ def generate_launch_description():
             trajectory_execution,
             moveit_controllers,
             planning_scene_monitor_parameters,
-            # octomap_config,
-            # octomap_updater_config,
         ],
     )
 
@@ -179,7 +178,7 @@ def generate_launch_description():
         ],
     )
 
-    # Publish TF
+    # Robot state publisher
     robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -188,16 +187,28 @@ def generate_launch_description():
         parameters=[robot_description],
     )
 
+    # Single ros2_control node for both Franka and Robotiq
     ros2_controllers_path = os.path.join(
         get_package_share_directory('franka_robotiq_moveit_config'),
         'config',
         'ros2_controllers.yaml',
     )
 
+    # Add Robotiq update rate config
+    robotiq_update_rate_config = os.path.join(
+        get_package_share_directory('robotiq_description'),
+        'config',
+        'robotiq_update_rate.yaml',
+    )
+
     ros2_control_node = Node(
         package='controller_manager',
         executable='ros2_control_node',
-        parameters=[robot_description, ros2_controllers_path],
+        parameters=[
+            robot_description, 
+            ros2_controllers_path,
+            robotiq_update_rate_config
+        ],
         remappings=[('joint_states', 'franka/joint_states')],
         output={
             'stdout': 'screen',
@@ -206,16 +217,23 @@ def generate_launch_description():
         on_exit=Shutdown(),
     )
 
-    # Load controllers
+    # Load all controllers
     load_controllers = []
-    for controller in ['joint_trajectory_controller', 'joint_state_broadcaster', 'panda_gripper']:
-        load_controllers += [
+    controllers_to_load = [
+        'joint_trajectory_controller', 
+        'joint_state_broadcaster',
+        'robotiq_gripper_controller',
+        'robotiq_activation_controller'
+    ]
+    
+    for controller in controllers_to_load:
+        load_controllers.append(
             ExecuteProcess(
                 cmd=['ros2 run controller_manager spawner {}'.format(controller)],
                 shell=True,
                 output='screen',
             )
-        ]
+        )
 
     # Warehouse mongodb server
     db_config = LaunchConfiguration('db')
@@ -231,54 +249,27 @@ def generate_launch_description():
         condition=IfCondition(db_config)
     )
 
+    # Joint state publisher to combine joint states from different sources
     joint_state_publisher = Node(
         package='joint_state_publisher',
         executable='joint_state_publisher',
         name='joint_state_publisher',
         parameters=[
-            {'source_list': ['franka/joint_states', 'panda_gripper/joint_states'], 'rate': 30}],
+            {'source_list': ['panda/joint_states', 'gripper/joint_states'], 'rate': 30}
+        ],
     )
-    robot_arg = DeclareLaunchArgument(
-        robot_ip_parameter_name,
-        description='Hostname or IP address of the robot.')
 
-    use_fake_hardware_arg = DeclareLaunchArgument(
-        use_fake_hardware_parameter_name,
-        default_value='false',
-        description='Use fake hardware')
-
-    load_gripper_arg = DeclareLaunchArgument(
-            load_gripper_parameter_name,
-            default_value='true',
-            description='Use Franka Gripper as an end-effector, otherwise, the robot is loaded '
-                        'without an end-effector.')
-    
-    fake_sensor_commands_arg = DeclareLaunchArgument(
-        fake_sensor_commands_parameter_name,
-        default_value='false',
-        description="Fake sensor commands. Only valid when '{}' is true".format(
-            use_fake_hardware_parameter_name))
-
-    gripper_launch_file = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([PathJoinSubstitution(
-            [FindPackageShare('robotiq_description'), 'launch', 'robotiq_control.launch.py'])]),
-        launch_arguments={'robot_ip': robot_ip,
-                          use_fake_hardware_parameter_name: use_fake_hardware}.items(),
-        condition=IfCondition(load_gripper)
-    )
-    return LaunchDescription(
-        [robot_arg,
-         use_fake_hardware_arg,
-         fake_sensor_commands_arg,
-         load_gripper_arg,
-         db_arg,
-         rviz_node,
-         robot_state_publisher,
-         run_move_group_node,
-         ros2_control_node,
-         mongodb_server_node,
-         joint_state_publisher,
-         gripper_launch_file
-         ]
-        + load_controllers
-    )
+    return LaunchDescription([
+        robot_arg,
+        use_fake_hardware_arg,
+        fake_sensor_commands_arg,
+        load_gripper_arg,
+        com_port_arg,
+        db_arg,
+        rviz_node,
+        robot_state_publisher,
+        run_move_group_node,
+        ros2_control_node,
+        mongodb_server_node,
+        joint_state_publisher,
+    ] + load_controllers)

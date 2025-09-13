@@ -1,6 +1,6 @@
 controller_manager:
   ros__parameters:
-    update_rate: 1000  # Hz
+    update_rate: 100  # Hz
 
     joint_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
@@ -14,6 +14,7 @@ controller_manager:
     robotiq_activation_controller:
       type: robotiq_controllers/RobotiqActivationController
 
+# Franka arm controller configuration
 joint_trajectory_controller:
   ros__parameters:
     joints:
@@ -38,14 +39,16 @@ joint_trajectory_controller:
       panda_joint6: { p: 150., d: 10., i: 0., i_clamp: 1., ff_velocity_scale: 1. }
       panda_joint7: { p: 50., d: 5., i: 0., i_clamp: 1., ff_velocity_scale: 1. }
 
+# Robotiq gripper controller configuration
+robotiq_gripper_controller:
+  ros__parameters:
+    default: true
+    joint: robotiq_85_left_knuckle_joint
+    use_effort_interface: true
+    use_speed_interface: true
+    allow_stalling: true
 
-  robotiq_gripper_controller:
-   ros__parameters:
-     default: true
-     joint: robotiq_85_left_knuckle_joint
-     use_effort_interface: true
-     use_speed_interface: true
-
-  robotiq_activation_controller:
-   ros__parameters:
-     default: true
+robotiq_activation_controller:
+  ros__parameters:
+    default: true
+    activation_timeout: 10.0

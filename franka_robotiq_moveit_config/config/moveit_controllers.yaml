@@ -1,4 +1,4 @@
-# MoveIt uses this configuration for controller management
+# MoveIt controllers configuration for Franka + Robotiq integration
 
 moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControllerManager
 
@@ -7,7 +7,9 @@ moveit_simple_controller_manager:
     - joint_trajectory_controller
     - robotiq_gripper_controller
 
+  # Franka arm controller configuration
   joint_trajectory_controller:
+    action_ns: follow_joint_trajectory
     type: FollowJointTrajectory
     joints:
       - panda_joint1
@@ -17,8 +19,9 @@ moveit_simple_controller_manager:
       - panda_joint5
       - panda_joint6
       - panda_joint7
-    action_ns: follow_joint_trajectory
     default: true
+
+  # Robotiq gripper controller configuration  
   robotiq_gripper_controller:
     type: GripperCommand
     joints:
