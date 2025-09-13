@@ -74,7 +74,10 @@ def generate_launch_description():
         ' fake_sensor_commands:=', fake_sensor_commands
     ])
 
-    robot_description = {'robot_description': robot_description_config}
+    robot_description = {
+        'robot_description': robot_description_config,
+        'publish_robot_description': True
+    }
 
     srdf_path = os.path.join(get_package_share_directory('franka_robotiq_moveit_config'),
                                               'config',
@@ -190,6 +193,7 @@ def generate_launch_description():
         'config',
         'ros2_controllers.yaml',
     )
+
     ros2_control_node = Node(
         package='controller_manager',
         executable='ros2_control_node',
@@ -254,9 +258,10 @@ def generate_launch_description():
         default_value='false',
         description="Fake sensor commands. Only valid when '{}' is true".format(
             use_fake_hardware_parameter_name))
+
     gripper_launch_file = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([PathJoinSubstitution(
-            [FindPackageShare('robotiq_description'), 'launch', 'view_gripper.launch.py'])]),
+            [FindPackageShare('robotiq_description'), 'launch', 'robotiq_control.launch.py'])]),
         launch_arguments={'robot_ip': robot_ip,
                           use_fake_hardware_parameter_name: use_fake_hardware}.items(),
         condition=IfCondition(load_gripper)

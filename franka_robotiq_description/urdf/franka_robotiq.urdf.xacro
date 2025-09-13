@@ -20,7 +20,6 @@
     sim_ignition="false"
     sim_isaac="false"
     use_fake_hardware="$(arg use_fake_hardware)"
-    fake_sensor_commands="$(arg fake_sensor_commands)"
     include_ros2_control="true"
     com_port="$(arg gripper_com_port)">
     <origin xyz="0 0 -0.03" rpy="0 0 0"/>

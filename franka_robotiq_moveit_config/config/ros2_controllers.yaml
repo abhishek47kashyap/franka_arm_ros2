@@ -5,11 +5,14 @@ controller_manager:
     joint_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
-    panda_gripper:
-      type: position_controllers/GripperActionController
-
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
+
+    robotiq_gripper_controller:
+      type: position_controllers/GripperActionController
+
+    robotiq_activation_controller:
+      type: robotiq_controllers/RobotiqActivationController
 
 joint_trajectory_controller:
   ros__parameters:
@@ -35,12 +38,14 @@ joint_trajectory_controller:
       panda_joint6: { p: 150., d: 10., i: 0., i_clamp: 1., ff_velocity_scale: 1. }
       panda_joint7: { p: 50., d: 5., i: 0., i_clamp: 1., ff_velocity_scale: 1. }
 
-panda_gripper:
-  ros__parameters:
-    joint: robotiq_85_left_knuckle_joint
-    command_interfaces:
-      - position
-    state_interfaces:
-      - position
-      - velocity
-    allow_stalling: false
+
+  robotiq_gripper_controller:
+   ros__parameters:
+     default: true
+     joint: robotiq_85_left_knuckle_joint
+     use_effort_interface: true
+     use_speed_interface: true
+
+  robotiq_activation_controller:
+   ros__parameters:
+     default: true
