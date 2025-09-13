@@ -5,7 +5,7 @@
   <xacro:arg name="robot_ip" default=""/>
   <xacro:arg name="use_fake_hardware" default="false"/>
   <xacro:arg name="fake_sensor_commands" default="false"/>
-  <xacro:arg name="gripper_com_port" default="/dev/ttyUSB0"/>
+  <xacro:arg name="com_port" default="/dev/ttyUSB1"/>
 
   <!-- Load panda arm -->
   <xacro:include filename="$(find franka_description)/robots/panda_arm.xacro"/>
@@ -21,7 +21,7 @@
     sim_isaac="false"
     use_fake_hardware="$(arg use_fake_hardware)"
     include_ros2_control="true"
-    com_port="$(arg gripper_com_port)">
+    com_port="$(arg com_port)">
     <origin xyz="0 0 -0.03" rpy="0 0 0"/>
   </xacro:robotiq_gripper>
 
