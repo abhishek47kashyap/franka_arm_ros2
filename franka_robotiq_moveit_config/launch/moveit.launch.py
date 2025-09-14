@@ -220,10 +220,10 @@ def generate_launch_description():
     # Load all controllers
     load_controllers = []
     controllers_to_load = [
-        'joint_trajectory_controller', 
-        'joint_state_broadcaster',
+        'robotiq_activation_controller',
         'robotiq_gripper_controller',
-        'robotiq_activation_controller'
+        # 'joint_trajectory_controller', 
+        'joint_state_broadcaster'
     ]
     
     for controller in controllers_to_load:

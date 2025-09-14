@@ -14,7 +14,7 @@
   <!-- Load Robotiq Gripper -->
   <xacro:include filename="$(find robotiq_description)/urdf/robotiq_2f_85_macro.urdf.xacro"/>
   <xacro:robotiq_gripper 
-    name="gripper"
+    name="RobotiqGripperHardwareInterface"
     prefix=""
     parent="$(arg arm_id)_link8"
     sim_ignition="false"

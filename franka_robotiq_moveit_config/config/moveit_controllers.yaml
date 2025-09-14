@@ -1,5 +1,5 @@
 # MoveIt controllers configuration for Franka + Robotiq integration
-
+moveit_manage_controllers: True
 moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControllerManager
 
 moveit_simple_controller_manager:
