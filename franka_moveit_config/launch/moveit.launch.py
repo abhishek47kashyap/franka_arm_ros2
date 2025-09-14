@@ -132,8 +132,8 @@ def generate_launch_description():
     world_frame = 'panda_link0'
     octomap_config = {
         'octomap_frame': world_frame,
-        'octomap_resolution': 0.05,
-        'max_range': 5.0
+        'octomap_resolution': 0.02,
+        'max_range': 2.0
     }
     octomap_updater_config = load_yaml('franka_moveit_config', 'config/sensors_3d.yaml')
 
